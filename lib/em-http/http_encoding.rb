@@ -51,7 +51,14 @@ module EventMachine
 
       # Non CONNECT proxies require that you provide the full request
       # uri in request header, as opposed to a relative path.
-      query = uri.join(query) if proxy
+      # Don't modify the header with CONNECT proxies. It's unneeded and will
+      # cause 400 Bad Request errors with many standard setups.
+      if proxy
+        query = uri.join(query)
+        # Drop the userinfo, it's been converted to a header and won't be
+        # accepted by the proxy
+        query.userinfo = nil
+      end
 
       HTTP_REQUEST_HEADER % [method.to_s.upcase, query]
     end
